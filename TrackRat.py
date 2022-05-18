@@ -41,8 +41,8 @@ class Data(torch.utils.data.Dataset):
         return img_tensor, self.labels[idx, :]
     
 ### Dataloader
-imgpath = 'C:/Users/Richy Yun/Dropbox/Projects/RatTracking/ChocolateImages'
-labelpath = 'C:/Users/Richy Yun/Dropbox/Projects/RatTracking/ChocolateLabels'
+imgpath = os.getcwd() + '/ChocolateImages'
+labelpath = os.getcwd() + '~/ChocolateLabels'
 data = Data(imgpath, labelpath)
 batch_size = 32
 dataloader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=True)
