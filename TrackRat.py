@@ -10,8 +10,12 @@ import cv2
 import matplotlib.pyplot as plt
 from torch import nn
 from torch_lr_finder import LRFinder
+from GPUtil import showUtilization as gpu_usage # For debugging cuda
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Just so torch_lr_finder doesn't clash
+
+# Define device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ### Define dataset
 class Data(torch.utils.data.Dataset):
@@ -42,25 +46,39 @@ class Data(torch.utils.data.Dataset):
     
 ### Dataloader
 imgpath = os.getcwd() + '/ChocolateImages'
-labelpath = os.getcwd() + '~/ChocolateLabels'
+labelpath = os.getcwd() + '/ChocolateLabels'
 data = Data(imgpath, labelpath)
 batch_size = 32
 dataloader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=True)
 loader= iter(dataloader)
 
-### For defining height and width
-img = cv2.imread(imgpath + '/Frame0.jpg')
-height = img.shape[0]
-width = img.shape[1]
+# ### For defining height and width
+# img = cv2.imread(imgpath + '/Frame0.jpg')
+# height = img.shape[0]
+# width = img.shape[1]
 
 ### Define model
 class positionmodel(nn.Module):                    
-    def __init__(self, h, w): 
+    def __init__(self): 
         super(positionmodel,self).__init__()    
-        self.h = h
-        self.w = w   
-        self.resnet = torchvision.models.resnet50(pretrained = True)            
-                                                
+        # self.h = h
+        # self.w = w   
+        self.resnet = torchvision.models.resnet18(pretrained = True)            
+                
+        # Has to be in init to be considered in cuda for some reason
+        self.fc = nn.Sequential(             
+            nn.Linear(self.resnet.fc.in_features, 1024),
+            nn.ReLU(),
+            
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            
+            nn.Linear(256, 2),
+        )          
+                               
     def forward(self, x):     
         # Step through resnet until right before the fc layer                  
         x = self.resnet.conv1(x)
@@ -75,39 +93,25 @@ class positionmodel(nn.Module):
         x = self.resnet.avgpool(x)
         
         x = torch.squeeze(x)
-                
-        # Define a new fc layer for each coordinate
-        self.fcx = nn.Sequential(             
-            nn.Linear(x.shape[1], 1024),
-            nn.ReLU(),
-            
-            nn.Linear(1024, self.w),
-            nn.Softmax(dim=1),
-        )  
-        self.fcy = nn.Sequential(             
-            nn.Linear(x.shape[1], 1024),
-            nn.ReLU(),
-            
-            nn.Linear(1024, self.h),
-            nn.Softmax(dim=1),
-        )                                 
-        
-        xpos = self.fcx(x)
-        ypos = self.fcy(x)
-        return xpos, ypos, x
+                        
+        pos = self.fc(x)
+
+        return pos, x #returning x for debugging purposes
 
 ### Setup model, optimizer, and loss criterion
-model = positionmodel(height, width)
+model = positionmodel()
 model = model.float()
-test = torch.ones((10, 3, height, width))
-x_out = model(test)  # The model doesn't recognize everything untill this step
+model = model.to(device)
+# next(model.parameters()).device # For debugging
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=0)
-criterion = nn.CrossEntropyLoss()
+criterion = nn.MSELoss()
+# criterion = nn.CrossEntropyLoss()
 
 ### Freeze pretrained model
 for name, param in model.named_parameters():
     print(name)
-    if 'fcx' not in name and 'fcy' not in name:
+    # if 'fcx' not in name and 'fcy' not in name:
+    if 'fc' not in name:
         param.requires_grad_(False) 
 
 # ### Find LR, must modify model to return one output and dataloader to return one label
@@ -119,21 +123,19 @@ for name, param in model.named_parameters():
 epochs = 10
 TrainLoss = np.zeros((epochs, len(dataloader)))
 for e in range(epochs):
-    for (b, data) in enumerate(dataloader):
+    b = 0
+    for img, label in dataloader:
         start = time.time()
-        img = data[0]
-        label = data[1]
+        img = img.to(device)
+        label = label.to(device)
+
         print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(dataloader))
         
         print('Forward pass...')
-        x_out, y_out, _ = model(img)
+        out, _ = model(img)
                 
-        lossx = nn.functional.cross_entropy(x_out, label[:, 0])
-        
-        lossy = nn.functional.cross_entropy(y_out, label[:, 1])
-        
-        loss = (lossx+lossy)/2
-        del lossx, lossy
+        # loss = nn.functional.cross_entropy(out, label)
+        loss = nn.functional.mse_loss(out, label.float())
                 
         TrainLoss[e,b] = loss.item()
         
@@ -144,6 +146,7 @@ for e in range(epochs):
         
         print('Training Loss:', TrainLoss[e,b])
         print('Time:', time.time()-start)
+        b += 1
 
     
 ## Save trained model
