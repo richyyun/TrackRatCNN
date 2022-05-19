@@ -8,7 +8,7 @@ LabelData.py allows for manual labeling of each frame of a video and saves each 
 
 I am currently using transfer learning with a pretrained network (ResNet) and re-formatting the fully connected layer into a linear output with ReLU activation for the two coordinates. The loss function is the root mean squared error, which essentially gives the distance of the correct pixel to the predicted pixel. I have configured the model to run on a GPU (CUDA) for speed (roughly 100 times faster).
 
-### To do
+## To do
 - ~~Implement Dataset and Dataloader~~
 - ~~Run model on GPU~~
 - Determine if current version of the network can learn coordinates at all. 
