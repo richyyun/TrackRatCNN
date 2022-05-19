@@ -1,5 +1,4 @@
 ''' Machine learning for tracking a rat '''
-
 import pickle
 import torch
 import time
@@ -17,6 +16,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Just so torch_lr_finder doesn't clas
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+''' Dataset and Dataloader setup '''
 ### Define dataset
 class Data(torch.utils.data.Dataset):
     def __init__(self, imgpath, labelpath):
@@ -57,15 +58,17 @@ loader= iter(dataloader)
 # height = img.shape[0]
 # width = img.shape[1]
 
-### Define model
+
+
+''' Define model '''
 class positionmodel(nn.Module):                    
     def __init__(self): 
         super(positionmodel,self).__init__()    
         # self.h = h
         # self.w = w   
-        self.resnet = torchvision.models.resnet18(pretrained = True)            
+        self.resnet = torchvision.models.resnet18(pretrained = True) # Pretrained ResNet            
                 
-        # Has to be in init to be considered in cuda for some reason
+        # Has to be in init. If defined in forward, device not considered to be cuda
         self.fc = nn.Sequential(             
             nn.Linear(self.resnet.fc.in_features, 1024),
             nn.ReLU(),
@@ -77,6 +80,7 @@ class positionmodel(nn.Module):
             nn.ReLU(),
             
             nn.Linear(256, 2),
+            nn.ReLU(),
         )          
                                
     def forward(self, x):     
@@ -93,7 +97,8 @@ class positionmodel(nn.Module):
         x = self.resnet.avgpool(x)
         
         x = torch.squeeze(x)
-                        
+        
+        # Apply our new fc layer                
         pos = self.fc(x)
 
         return pos, x #returning x for debugging purposes
@@ -119,8 +124,9 @@ for name, param in model.named_parameters():
 # lr_finder.range_test(dataloader, end_lr=100, num_iter=100)
 # lr_finder.plot()
 
+''' Train model '''
 ### Mini-batch training
-epochs = 10
+epochs = 100
 TrainLoss = np.zeros((epochs, len(dataloader)))
 for e in range(epochs):
     b = 0
@@ -134,9 +140,10 @@ for e in range(epochs):
         print('Forward pass...')
         out, _ = model(img)
                 
+        # Root mean squared loss
+        loss = torch.sqrt(nn.functional.mse_loss(out, label.float()))
         # loss = nn.functional.cross_entropy(out, label)
-        loss = nn.functional.mse_loss(out, label.float())
-                
+        
         TrainLoss[e,b] = loss.item()
         
         print('Backward pass...')
@@ -150,13 +157,13 @@ for e in range(epochs):
 
     
 ## Save trained model
-modelfile = 'C:/Users/Richy Yun/Dropbox/Projects/RatTracking/Code/Chocolate1T_07_14_14_model.pt'
+modelfile = os.getcwd() + 'Models/Chocolate1T_07_14_14_model.pt'
 torch.save(model.state_dict(), modelfile)
 print('Saved')
 
     
 ''' For debugging '''     
-## Display two images, show the output of resnet and the x and y softmax layers
+## Display two images, show the output of ResNet and the final layer
 temp = img[0,:,:,:]
 temp = temp.permute(1, 2, 0)
 temp = temp.numpy()
@@ -167,19 +174,19 @@ temp2 = temp2.permute(1, 2, 0)
 temp2 = temp2.numpy()
 cv2.imshow('2',temp2)
 
-x_out, y_out, x = model(img[0:1,:,:,:])    
+pos, x = model(img[0:1,:,:,:])    
 
 plt.figure()
 plt.plot(x.detach().numpy()[0,:])
 plt.plot(x.detach().numpy()[1,:])
 
 plt.figure()
-plt.plot(x_out.detach().numpy()[0,:])
-plt.plot(x_out.detach().numpy()[1,:])
+plt.plot(pos[:,0].detach().numpy()[0,:])
+plt.plot(pos[:,0].detach().numpy()[1,:])
 
 plt.figure()
-plt.plot(y_out.detach().numpy()[0,:])
-plt.plot(y_out.detach().numpy()[1,:])
+plt.plot(pos[:,1].detach().numpy()[0,:])
+plt.plot(pos[:,1].detach().numpy()[1,:])
 
 
 
