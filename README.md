@@ -10,6 +10,7 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
 
 ## To do
 - ~~Implement Dataset and Dataloader~~
+- ~~Define model~~
 - ~~Run model on GPU~~
 - Determine if current version of the network can learn coordinates at all. 
   - May need to resize image to be smaller for more efficient training
