@@ -18,7 +18,7 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
   - Batch normalization might help - worth testing
   - Hyperparameter tuning
 - Re-save the video with correct label and the prediction overlaid for manual assessment
-  - Errors could be related to instances when the animal is rearing
+  - Large errors could be related to instances when the animal is rearing
 - Split the train and test sets in the Dataset and automate cross validation
   - Use to inform need of regularization
 - Test on completely different dataset
