@@ -12,13 +12,13 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
 - ~~Implement Dataset and Dataloader~~
 - ~~Run model on GPU~~
 - Determine if current version of the network can learn coordinates at all. 
- - May need to resize image to be smaller for more efficient training
- - May require more epochs
- - Hyperparameter tuning
- - Batch normalization might help 
+  - May need to resize image to be smaller for more efficient training
+  - May require more epochs
+  - Hyperparameter tuning
+  - Batch normalization might help 
 - Re-save the video with correct label and the prediction overlaid for manual assessment
- - Errors could be related to instances when the animal is rearing
+  - Errors could be related to instances when the animal is rearing
 - Split the train and test sets in the Dataset and automate cross validation
- - Use to inform need of regularization
+  - Use to inform need of regularization
 - Test on completely different dataset
- - Iterate further tuning
+  - Iterate further tuning
