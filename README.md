@@ -14,6 +14,7 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
 - ~~Run model on GPU~~
 - Determine if current version of the network can learn coordinates at all. 
   - The pretrained networks have a preprocessing step for resizing images. Rather than inputting the raw images directly to the network, build a CNN to reduce it first. 
+    - Downsample first (2x should not affect image quality much)
     - Can build an autoencoder-esque preprocessing step, or just allow the weights in the initial CNN to be trained
   - Can try larger ResNet or deeper fully connected layer for higher accuracy
   - Batch normalization might help - worth testing
