@@ -14,8 +14,9 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
 - Determine if current version of the network can learn coordinates at all. 
   - May need to resize image to be smaller for more efficient training
   - May require more epochs
+  - Can try larger ResNet or deeper fully connected layer for higher accuracy
+  - Batch normalization might help - worth testing
   - Hyperparameter tuning
-  - Batch normalization might help 
 - Re-save the video with correct label and the prediction overlaid for manual assessment
   - Errors could be related to instances when the animal is rearing
 - Split the train and test sets in the Dataset and automate cross validation
