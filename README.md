@@ -17,7 +17,7 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
     - Downsample first (2x should not affect image quality much)
     - Can build an autoencoder-esque preprocessing step, or just allow the weights in the preprocessing CNN to be trained
   - Can try larger ResNet or deeper fully connected layer for higher accuracy
-  - Batch normalization might help - worth testing
+  - Batch normalization in the fully connected layers as well might help
   - Hyperparameter tuning
 - Re-save the video with correct label and the prediction overlaid for manual assessment
   - Large errors could be related to instances when the animal is rearing
