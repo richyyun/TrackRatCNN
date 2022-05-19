@@ -22,5 +22,7 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
   - Large errors could be related to instances when the animal is rearing
 - Split the train and test sets in the Dataset and automate cross validation
   - Use to inform need of regularization
+- Compare different networks for transfer learning
+  - ResNet18, ResNet50, Inceptionnet, etc.
 - Test on completely different dataset
   - Iterate further tuning
