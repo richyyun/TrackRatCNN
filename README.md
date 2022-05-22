@@ -13,10 +13,11 @@ I am currently using transfer learning with a pretrained network (ResNet) and re
 - ~~Define model~~
 - ~~Run model on GPU~~
 - Determine if current version of the network can learn coordinates at all. 
-  - May need to resize image to be smaller for more efficient training
-  - May require more epochs
+  - The pretrained networks have a preprocessing step for resizing images. Rather than inputting the raw images directly to the network, build a CNN to reduce it first. 
+    - Downsample first (2x should not affect image quality much)
+    - Can build an autoencoder-esque preprocessing step, or just allow the weights in the preprocessing CNN to be trained
   - Can try larger ResNet or deeper fully connected layer for higher accuracy
-  - Batch normalization might help - worth testing
+  - Batch normalization in the fully connected layers as well might help
   - Hyperparameter tuning
 - Re-save the video with correct label and the prediction overlaid for manual assessment
   - Large errors could be related to instances when the animal is rearing
