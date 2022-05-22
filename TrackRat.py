@@ -79,11 +79,11 @@ class positionmodel(nn.Module):
     def __init__(self): 
         super(positionmodel,self).__init__()    
         
-        # Make image smaller
-        self.resize= torchvision.transforms.Resize(224) 
+        # Make image smaller (halving the height and width)
+        self.Resize= torchvision.transforms.Resize(240) 
         
         # Normalize image
-        self.normalize = torchvision.transforms.Normalize(mean = 0.5, std = 0.25)
+        self.Normalize = torchvision.transforms.Normalize(mean = 0.5, std = 0.25)
         
         # Number of neurons for convolutional layers
         features = 128
@@ -129,8 +129,8 @@ class positionmodel(nn.Module):
     def forward(self, x):     
         
         # Format image
-        x = self.resize(x)
-        x = self.normalize(x)
+        x = self.Resize(x)
+        x = self.Normalize(x)
         
         # Initial convolution
         x = self.Conv1(x)
@@ -173,11 +173,11 @@ criterion = nn.MSELoss()
 
 ''' Train model '''
 ### Mini-batch training
-epochs = 100
+epochs = 50
 TrainLoss = np.zeros((epochs, len(dataloader)))
-verbose_steps = 100 # How many batches to wait before printing info
+verbose_steps = 100         # How many batches to wait before printing info
 for e in range(epochs):
-    b = 0
+    b = 0                   # Batch number
     for img, label in dataloader:
         
         # Put on CUDA 
@@ -210,7 +210,7 @@ for e in range(epochs):
 
 ''' Save '''
 ## Save trained model
-modelfile = os.getcwd() + '/Models/Custom_MoreFeatures.pt'
+modelfile = os.getcwd() + '/Models/Custom_Final.pt'
 torch.save(model.state_dict(), modelfile)
 print('Model Saved')
 
@@ -219,14 +219,16 @@ print('Model Saved')
 # model.load_state_dict(torch.load(modelfile))
 
 ## Save losses
-lossfile = os.getcwd() + '/Losses/Custom_MoreFeatures.pkl'
+lossfile = os.getcwd() + '/Losses/Custom_Final.pkl'
 file = open(lossfile,'wb')
 pickle.dump(TrainLoss, file)
 print('Losses Saved')
+file.close()
 
 # # To load
 # file = open(lossfile,'rb')
 # TrainLoss = pickle.load(file)
+# file.close()
 
 
 ''' Plot Losses '''
@@ -237,6 +239,11 @@ plt.plot(TrainLoss.T)
 plt.figure()
 plt.plot(np.mean(TrainLoss, axis=1))
 
+# Difference per epoch
+avg = np.mean(TrainLoss, axis=1)
+diff = [avg[i] - avg[i-1] for i in range(1,len(avg))]
+plt.figure()
+plt.plot(diff)
 
 ''' Load and re-save video with true positions and prediction '''
 vidname = os.getcwd() + '/Videos/Chocolate1T_07_14_14.mpg'
@@ -246,7 +253,7 @@ width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps = video.get(cv2.CAP_PROP_FPS)
 video = cv2.VideoCapture(vidname)
-labelvid = os.getcwd() + '/Videos/Chocolate1T_07_14_14_Predict_Custom.avi'
+labelvid = os.getcwd() + '/Videos/Chocolate1T_07_14_14_Predict_Custom_MSE.avi'
 out = cv2.VideoWriter(labelvid, cv2.VideoWriter_fourcc(*'MJPG'), fps, (width, height))
 
 # Print video. Probably a faster way to do this, but sufficiently fast for now
