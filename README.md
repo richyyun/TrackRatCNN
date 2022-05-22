@@ -1,6 +1,6 @@
 # TrackRatCNN 
 
-*Work in progress*
+\**Work in progress*\*
  
 As part of learning more about machine learning and neural networks I challenged myself to redo the rat tracking done in the TrackRat repository with a convolutional neural network rather than a heuristic. This is purely a personal project and not part of my research.
 
