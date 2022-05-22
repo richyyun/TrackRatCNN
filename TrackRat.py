@@ -9,7 +9,9 @@ import cv2
 import matplotlib.pyplot as plt
 from torch import nn
 # from torch_lr_finder import LRFinder
-# os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Just so torch_lr_finder doesn't clash
+
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Just so torch_lr_finder doesn't clash
+
 # from GPUtil import showUtilization as gpu_usage # For debugging cuda
 # from numba import cuda # Needed for emptying GPU cache
 
@@ -86,28 +88,28 @@ class positionmodel(nn.Module):
         self.Normalize = torchvision.transforms.Normalize(mean = 0.5, std = 0.25)
         
         # Number of neurons for convolutional layers
-        features = 128
+        filters = 128
         
         self.Conv1 = nn.Sequential(
-            nn.Conv2d(1, features, kernel_size = (5,5), stride = (2, 2), padding = (2, 2)),
-            nn.BatchNorm2d(features),
+            nn.Conv2d(1, filters, kernel_size = (5,5), stride = (2, 2), padding = (2, 2)),
+            nn.BatchNorm2d(filters),
             nn.ReLU(inplace = True),
             nn.MaxPool2d(kernel_size = 5, stride = 2, padding = 2)
         )
         
         # Convolution layers
         self.BasicBlock = nn.Sequential(
-            nn.Conv2d(features, features, kernel_size = (3,3), stride = (1,1), padding = (1,1)),
-            nn.BatchNorm2d(features),
+            nn.Conv2d(filters, filters, kernel_size = (3,3), stride = (1,1), padding = (1,1)),
+            nn.BatchNorm2d(filters),
             nn.ReLU(),
-            nn.Conv2d(features, features, kernel_size = (3,3), stride = (1,1), padding = (1,1)),
-            nn.BatchNorm2d(features)
+            nn.Conv2d(filters, filters, kernel_size = (3,3), stride = (1,1), padding = (1,1)),
+            nn.BatchNorm2d(filters)
         )         
         
         # Shrink parameter count so fully connected layers aren't too large
         self.AvgPool = nn.AdaptiveAvgPool2d((10, 10))
         
-        self.fcin = features*10*10
+        self.fcin = filters*10*10
         
         # Has to be in init. If defined in forward, device not considered to be cuda
         # Fully connected layers, returning two values that correspond to x-y coordinates
@@ -155,8 +157,7 @@ model = positionmodel()
 model = model.float()
 model = model.to(device)
 # next(model.parameters()).device # For debugging
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=0)
-criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
 
 # ### Freeze pretrained model
 # for name, param in model.named_parameters():
@@ -165,7 +166,8 @@ criterion = nn.MSELoss()
 #     if 'fc' not in name:
 #         param.requires_grad_(False) 
 
-# ### Find LR, must modify model to return one output and dataloader to return one label
+# ### Find LR, must modify model to return one output and dataloader to return one 
+# criterion = nn.MSELoss()
 # lr_finder = LRFinder(model, optimizer, criterion, device="cpu")
 # lr_finder.range_test(dataloader, end_lr=100, num_iter=100)
 # lr_finder.plot()
@@ -173,7 +175,7 @@ criterion = nn.MSELoss()
 
 ''' Train model '''
 ### Mini-batch training
-epochs = 50
+epochs = 100
 TrainLoss = np.zeros((epochs, len(dataloader)))
 verbose_steps = 100         # How many batches to wait before printing info
 for e in range(epochs):
@@ -210,7 +212,7 @@ for e in range(epochs):
 
 ''' Save '''
 ## Save trained model
-modelfile = os.getcwd() + '/Models/Custom_Final.pt'
+modelfile = os.getcwd() + '/Models/Custom_WeightDecay.pt'
 torch.save(model.state_dict(), modelfile)
 print('Model Saved')
 
@@ -219,7 +221,7 @@ print('Model Saved')
 # model.load_state_dict(torch.load(modelfile))
 
 ## Save losses
-lossfile = os.getcwd() + '/Losses/Custom_Final.pkl'
+lossfile = os.getcwd() + '/Losses/Custom_WeightDecay.pkl'
 file = open(lossfile,'wb')
 pickle.dump(TrainLoss, file)
 print('Losses Saved')
