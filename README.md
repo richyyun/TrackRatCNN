@@ -2,28 +2,22 @@
 
 *Work in progress*
  
-As part of learning more about machine learning and neural networks I challenged myself to redo the rat tracking done in the TrackRat repository with a convolutional neural network rather than a heuristic. 
+As part of learning more about machine learning and neural networks I challenged myself to redo the rat tracking done in the TrackRat repository with a convolutional neural network rather than a heuristic. This is purely a personal project and not part of my research.
 
 LabelData.py allows for manual labeling of each frame of a video and saves each frame as an image. TrackRat then uses the images and labels to create a PyTorch Dataset class for use in a Dataloader. 
 
-I am currently using transfer learning with a pretrained network (ResNet) and re-formatting the fully connected layer into a linear output with ReLU activation for the two coordinates. The loss function is the root mean squared error, which essentially gives the distance of the correct pixel to the predicted pixel. I have configured the model to run on a GPU (CUDA) for speed (roughly 100 times faster).
+I initially tried using a pre-trained model (ResNet) for transfer learning, but it was not very accurate regardless of if I allowed all layers to train or not, likely due to the differences in input images (small color images vs wide greyscale) and the outputs (classification vs x-y coordinates). As a result I implemented my own network, shown in the current version of the code, which can be trained to detect the nose within roughly 10 pixel accuracy. I am currently tuning some hyperparameters of the network, including the number of layers and number of neurons (filters) per convolutional layer, and will move onto splitting the dataset into training and test sets to determine the need for regularization. 
 
 ## To do
 - ~~Implement Dataset and Dataloader~~
 - ~~Define model~~
 - ~~Run model on GPU~~
-- Determine if current version of the network can learn coordinates at all. 
-  - The pretrained networks have a preprocessing step for resizing images. Rather than inputting the raw images directly to the network, build a CNN to reduce it first. 
-    - Downsample first (2x should not affect image quality much)
-    - Can build an autoencoder-esque preprocessing step, or just allow the weights in the preprocessing CNN to be trained
-  - Can try larger ResNet or deeper fully connected layer for higher accuracy
-  - Batch normalization in the fully connected layers as well might help
-  - Hyperparameter tuning
+- ~~Use transfer learning (ResNet or InceptionNet) with changes to the fully connected layers~~
+- Design a custom network 
+  - Hyperparameter tuning :arrow_left: Currently here
 - Re-save the video with correct label and the prediction overlaid for manual assessment
   - Large errors could be related to instances when the animal is rearing
 - Split the train and test sets in the Dataset and automate cross validation
   - Use to inform need of regularization
-- Compare different networks for transfer learning
-  - ResNet18, ResNet50, Inceptionnet, etc.
 - Test on completely different dataset
-  - Iterate further tuning
+  - Iterate for further tuning
