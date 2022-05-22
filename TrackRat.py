@@ -191,7 +191,7 @@ for e in range(epochs):
         # print('Forward pass...') # For debugging
         out, _ , _ = model(img)
                 
-        # Root mean squared loss
+        # Mean squared loss
         loss = nn.functional.mse_loss(out, label.float())
         
         TrainLoss[e,b] = loss.item()
