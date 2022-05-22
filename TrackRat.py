@@ -264,14 +264,14 @@ for f in range(length):
     _, frame = video.read()
     temp = data.__getitem__(f)
     pos = temp[1].numpy()
-    # Blue is "true" location
+    # Red is "true" location
     cv2.circle(frame, (int(pos[0]), int(pos[1])), 5, (0, 0, 255), thickness=2)
     
     img = temp[0]
     img = img.to(device)
     pred, _, _ = model(img[None, :])
     pred = pred.cpu().detach().numpy().squeeze()
-    # Red is prediction
+    # Blue is prediction
     cv2.circle(frame, (int(pred[0]), int(pred[1])), 5, (255, 0, 0), thickness=2) 
     
     if f%100 == 0:
