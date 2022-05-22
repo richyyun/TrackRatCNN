@@ -8,7 +8,7 @@ LabelData.py allows for manual labeling of each frame of a video and saves each 
 
 I initially tried using a pre-trained model (ResNet) for transfer learning, but it was not very accurate regardless of if I allowed all layers to train or not, likely due to the differences in input images (small color images vs wide greyscale) and the outputs (classification vs x-y coordinates). As a result I implemented my own network, shown in the current version of the code, which can be trained to detect the nose within roughly 10 pixel accuracy. I am currently tuning some hyperparameters of the network, including the number of layers and number of neurons (filters) per convolutional layer, and will move onto splitting the dataset into training and test sets to determine the need for regularization. 
 
-Current diagram of the model:
+Diagram of the current model:
 <p align="center">
   <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Diagram_20220522.png" />
 </p>
