@@ -14,7 +14,7 @@ I initially tried using a pre-trained model (ResNet) for transfer learning, but 
 - ~~Run model on GPU~~
 - ~~Use transfer learning (ResNet or InceptionNet) with changes to the fully connected layers~~
 - Design a custom network 
-  - Hyperparameter tuning :arrow_left: Currently here
+  - Hyperparameter tuning &larr; Currently here
 - Re-save the video with correct label and the prediction overlaid for manual assessment
   - Large errors could be related to instances when the animal is rearing
 - Split the train and test sets in the Dataset and automate cross validation
