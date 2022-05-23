@@ -171,20 +171,11 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
 # lr_finder.plot()
 
 
-''' Define training and evaluation '''
+''' Define training and evaluation ''' 
 # To keep scopes separate and avoid running out of memory
-
-
-''' Train model '''
-### Mini-batch training
-epochs = 100
-TrainLoss = np.zeros((epochs, len(trainloader)))
-TestLoss = np.zeros((epochs, len(testloader)))
-verbose_steps = 10         # How many batches to wait before printing info
-start = time.time()
-
-for e in range(epochs):
-    # Loop through train dataset
+# Train the model
+def train_one_epoch(model, trainloader, device, e, verbose_steps, TrainLoss):
+    model.train()
     b = 0                   # Batch number
     for img, label in trainloader:
         
@@ -211,7 +202,11 @@ for e in range(epochs):
             print('Time:', time.time()-start)
             
         b += 1
-    
+ 
+# Test the model 
+@torch.inference_mode()  # Decorator for no_grad(), speeds up calculations
+def evaluate(model, testloader, device, e, verbose_steps, TestLoss):
+    model.eval()
     # Loop through test dataset
     b = 0                   # Batch number
     for img, label in testloader:
@@ -231,11 +226,24 @@ for e in range(epochs):
         del loss    # Just to make sure the loss does not stay on the map even though item() should remove it
         
         if b%verbose_steps == 0:
-            print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(trainloader))
+            print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(testloader))
             print('Test Loss:', np.sqrt(TestLoss[e,b]*2)) # Euclidean distance by pixels
             print('Time:', time.time()-start)
             
         b += 1
+    
+
+''' Train model '''
+### Mini-batch training
+epochs = 100
+TrainLoss = np.zeros((epochs, len(trainloader)))
+TestLoss = np.zeros((epochs, len(testloader)))
+verbose_steps = 10         # How many batches to wait before printing info
+start = time.time()
+
+for e in range(epochs):
+    train_one_epoch(model, trainloader, device, e, verbose_steps, TrainLoss)
+    evaluate(model, testloader, device, e, verbose_steps, TestLoss)   
 
 
 ''' Save '''
