@@ -240,12 +240,14 @@ plt.plot(TrainLoss.T)
 # Average per epoch
 plt.figure()
 plt.plot(np.mean(TrainLoss, axis=1))
+plt.yscale('log')
 
 # Difference per epoch
 avg = np.mean(TrainLoss, axis=1)
 diff = [avg[i] - avg[i-1] for i in range(1,len(avg))]
 plt.figure()
 plt.plot(diff)
+
 
 ''' Load and re-save video with true positions and prediction '''
 vidname = os.getcwd() + '/Videos/Chocolate1T_07_14_14.mpg'
@@ -255,7 +257,7 @@ width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps = video.get(cv2.CAP_PROP_FPS)
 video = cv2.VideoCapture(vidname)
-labelvid = os.getcwd() + '/Videos/Chocolate1T_07_14_14_Predict_Custom_MSE.avi'
+labelvid = os.getcwd() + '/Videos/Chocolate1T_07_14_14_Predict_Custom.avi'
 out = cv2.VideoWriter(labelvid, cv2.VideoWriter_fourcc(*'MJPG'), fps, (width, height))
 
 # Print video. Probably a faster way to do this, but sufficiently fast for now
