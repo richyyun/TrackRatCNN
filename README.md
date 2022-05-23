@@ -18,6 +18,8 @@ MSE loss for each epoch when trained on the entire dataset:
   <img width="500" src="https://github.com/richyyun/TrackRatCNN/blob/main/Losses.png" />
 </p>
 
+34.6 in MSE translates to ~8.3 pixels in Euclidean distance from the true position to the predicted position. To ensure the model is doing well in all conditions (i.e. that it is consistent when the animal is rearing, using a nose-poke port for water, or grooming) I plotted the true and predicted positions on the original video. 
+
 ## To do
 1. ~~Implement Dataset and Dataloader~~
 2. ~~Define model~~
