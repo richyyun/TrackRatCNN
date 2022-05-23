@@ -15,7 +15,7 @@ Diagram of the current model:
 
 MSE loss for each epoch when trained on the entire dataset:
 <p align="center">
-  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Losses.png" />
+  <img width="500" src="https://github.com/richyyun/TrackRatCNN/blob/main/Losses.png" />
 </p>
 
 ## To do
