@@ -13,6 +13,11 @@ Diagram of the current model:
   <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Diagram_20220522.png" />
 </p>
 
+MSE loss for each epoch when trained on the entire dataset:
+<p align="center">
+  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Losses.png" />
+</p>
+
 ## To do
 1. ~~Implement Dataset and Dataloader~~
 2. ~~Define model~~
