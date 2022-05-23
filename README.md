@@ -2,7 +2,7 @@
 
 \**Work in progress*\*
  
-As part of learning more about machine learning and neural networks I challenged myself to redo the rat tracking done in the TrackRat repository with a convolutional neural network rather than a heuristic. I am also actually using git for version control to refresh myself on it. This is purely a personal project and not part of my research.
+As part of learning more about machine learning and neural networks I challenged myself to redo the rat tracking done in the TrackRat repository with a convolutional neural network rather than a heuristic. I am also using Git for actual version control to refresh myself on the process. This is purely a personal project and not part of my research.
 
 LabelData.py allows for manual labeling of each frame of a video and saves each frame as an image. TrackRat then uses the images and labels to create a PyTorch Dataset class for use in a Dataloader. 
 
