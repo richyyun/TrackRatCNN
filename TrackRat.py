@@ -43,6 +43,7 @@ class Data(torch.utils.data.Dataset):
         file = open(labelpath + '/Labels.pkl', 'rb')
         self.labels = pickle.load(file)
         self.labels = (torch.from_numpy(self.labels)).long()
+        self.labels = self.labels.to(device)
         
     def __len__(self):
         return len(self.images)
@@ -60,6 +61,7 @@ class Data(torch.utils.data.Dataset):
         img_tensor = img_tensor[0,:,:] # Black and white images from an IR camera so only need one channel
         img_tensor = img_tensor[None, :, :] # Previous step collapses channel dimension, so readd
         img_tensor = img_tensor.float()
+        img_tensor = img_tensor.to(device)
         
         return img_tensor, self.labels[idx, :]
     
@@ -169,6 +171,10 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
 # lr_finder.plot()
 
 
+''' Define training and evaluation '''
+# To keep scopes separate and avoid running out of memory
+
+
 ''' Train model '''
 ### Mini-batch training
 epochs = 100
@@ -178,7 +184,6 @@ verbose_steps = 10         # How many batches to wait before printing info
 start = time.time()
 
 for e in range(epochs):
-    
     # Loop through train dataset
     b = 0                   # Batch number
     for img, label in trainloader:
