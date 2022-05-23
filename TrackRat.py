@@ -64,11 +64,20 @@ class Data(torch.utils.data.Dataset):
         return img_tensor, self.labels[idx, :]
     
 ### Setup Dataloader
+# Path to data
 imgpath = os.getcwd() + '/ChocolateImages'
 labelpath = os.getcwd() + '/ChocolateLabels'
+
+# Define dataset
 data = Data(imgpath, labelpath)
+# Split dataset into train and test data
+testsize = int(0.2*np.floor(len(data)))
+trainsize = len(data) - testsize
+train_data, test_data = torch.utils.data.random_split(data, [trainsize, testsize])
+# Define dataloaders
 batch_size = 32     # Seems to work best 
-dataloader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=True)
+trainloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
+testloader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
 ''' Define model '''
 class positionmodel(nn.Module):                    
@@ -163,20 +172,21 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
 ''' Train model '''
 ### Mini-batch training
 epochs = 100
-TrainLoss = np.zeros((epochs, len(dataloader)))
-verbose_steps = 100         # How many batches to wait before printing info
+TrainLoss = np.zeros((epochs, len(trainloader)))
+TestLoss = np.zeros((epochs, len(testloader)))
+verbose_steps = 10         # How many batches to wait before printing info
+start = time.time()
+
 for e in range(epochs):
+    
+    # Loop through train dataset
     b = 0                   # Batch number
-    for img, label in dataloader:
+    for img, label in trainloader:
         
         # Put on CUDA 
         img = img.to(device)
         label = label.to(device)
-        
-        if b%verbose_steps == 0:
-            print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(dataloader))
-            start = time.time()
-        
+                
         # print('Forward pass...') # For debugging
         out, _ , _ = model(img)
                 
@@ -190,8 +200,34 @@ for e in range(epochs):
         loss.backward()
         optimizer.step()
         
-        if b%100 == 0:
+        if b%verbose_steps == 0:
+            print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(trainloader))
             print('Training Loss:', np.sqrt(TrainLoss[e,b]*2)) # Euclidean distance by pixels
+            print('Time:', time.time()-start)
+            
+        b += 1
+    
+    # Loop through test dataset
+    b = 0                   # Batch number
+    for img, label in testloader:
+        
+        # Put on CUDA 
+        img = img.to(device)
+        label = label.to(device)
+        
+        # Get output of model        
+        out, _ , _ = model(img)
+                      
+        # Mean squared loss
+        loss = nn.functional.mse_loss(out, label.float())
+        
+        TestLoss[e,b] = loss.item()
+        
+        del loss    # Just to make sure the loss does not stay on the map even though item() should remove it
+        
+        if b%verbose_steps == 0:
+            print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(trainloader))
+            print('Test Loss:', np.sqrt(TestLoss[e,b]*2)) # Euclidean distance by pixels
             print('Time:', time.time()-start)
             
         b += 1
@@ -199,7 +235,7 @@ for e in range(epochs):
 
 ''' Save '''
 ## Save trained model
-modelfile = os.getcwd() + '/Models/Custom_WeightDecay.pt'
+modelfile = os.getcwd() + '/Models/Custom_TrainTest.pt'
 torch.save(model.state_dict(), modelfile)
 print('Model Saved')
 
@@ -208,15 +244,15 @@ print('Model Saved')
 # model.load_state_dict(torch.load(modelfile))
 
 ## Save losses
-lossfile = os.getcwd() + '/Losses/Custom_WeightDecay.pkl'
+lossfile = os.getcwd() + '/Losses/Custom_TrainTest.pkl'
 file = open(lossfile,'wb')
-pickle.dump(TrainLoss, file)
+pickle.dump([TrainLoss, TestLoss], file)
 print('Losses Saved')
 file.close()
 
 # # To load
 # file = open(lossfile,'rb')
-# TrainLoss = pickle.load(file)
+# TrainLoss, TestLoss = pickle.load(file)
 # file.close()
 
 
