@@ -19,7 +19,7 @@ I initially tried using a pre-trained model (ResNet) for transfer learning, but 
    - ~~Hyperparameter tuning~~
    - ~~Re-save the video with correct label and the prediction overlaid for manual assessment~~
       - ~~Large errors could be related to instances when the animal is rearing~~
-6. Split the train and test sets in the Dataset and automate cross validation **&larr; Currently in progress**
+6. Split the train and test sets in the Dataset **&larr; Currently in progress**
    - Use to inform need of regularization (already using L2 and getting some from batch norm)
 7. Clean up code - split into other files
 7. Test on completely different dataset
