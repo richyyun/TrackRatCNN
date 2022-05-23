@@ -70,12 +70,6 @@ data = Data(imgpath, labelpath)
 batch_size = 32     # Seems to work best 
 dataloader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=True)
 
-# ### For defining height and width
-# img = cv2.imread(imgpath + '/Frame0.jpg')
-# height = img.shape[0]
-# width = img.shape[1]
-
-
 ''' Define model '''
 class positionmodel(nn.Module):                    
     def __init__(self): 
@@ -158,13 +152,6 @@ model = model.float()
 model = model.to(device)
 # next(model.parameters()).device # For debugging
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
-
-# ### Freeze pretrained model
-# for name, param in model.named_parameters():
-#     print(name)
-#     # if 'fcx' not in name and 'fcy' not in name:
-#     if 'fc' not in name:
-#         param.requires_grad_(False) 
 
 # ### Find LR, must modify model to return one output and dataloader to return one 
 # criterion = nn.MSELoss()
