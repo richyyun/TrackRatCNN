@@ -174,7 +174,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
 ''' Define training and evaluation ''' 
 # To keep scopes separate and avoid running out of memory
 # Train the model
-def train_one_epoch(model, trainloader, device, e, verbose_steps, TrainLoss):
+def train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps, TrainLoss):
     model.train()
     b = 0                   # Batch number
     for img, label in trainloader:
@@ -213,17 +213,18 @@ def evaluate(model, testloader, device, e, verbose_steps, TestLoss):
         
         # Put on CUDA 
         img = img.to(device)
-        label = label.to(device)
         
         # Get output of model        
         out, _ , _ = model(img)
                       
         # Mean squared loss
-        loss = nn.functional.mse_loss(out, label.float())
+        diff = np.subtract(out.cpu().detach().numpy(), label.cpu().detach().numpy())
+        squared = np.power(diff, 2)
+        mse = np.mean(squared)
         
-        TestLoss[e,b] = loss.item()
+        TestLoss[e,b] = mse
         
-        del loss    # Just to make sure the loss does not stay on the map even though item() should remove it
+        del out    # Just to make sure
         
         if b%verbose_steps == 0:
             print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(testloader))
@@ -242,7 +243,7 @@ verbose_steps = 10         # How many batches to wait before printing info
 start = time.time()
 
 for e in range(epochs):
-    train_one_epoch(model, trainloader, device, e, verbose_steps, TrainLoss)
+    train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps, TrainLoss)
     evaluate(model, testloader, device, e, verbose_steps, TestLoss)   
 
 
