@@ -26,17 +26,17 @@ I initially tried using a pre-trained model (ResNet) for transfer learning, but 
 ## Work done so far
 Diagram of the current model:
 <p align="center">
-  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Diagram_20220522.png" />
+  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Images/Diagram_20220522.png" />
 </p>
 
 MSE loss for each epoch when trained on the entire dataset:
 <p align="center">
-  <img width="500" src="https://github.com/richyyun/TrackRatCNN/blob/main/Losses.png" />
+  <img width="500" src="https://github.com/richyyun/TrackRatCNN/blob/main/Images/Losses.png" />
 </p>
 
 34.6 in MSE translates to ~8.3 pixels in Euclidean distance from the true position to the predicted position. To ensure the model is doing well in all conditions (i.e. that it is consistent when the animal is rearing, using a nose-poke port for water, or grooming) I plotted the true and predicted positions on the original video. Below shows, from left to right, examples of the true position (red circle) and predicted position (blue circle) when the animal is rearing, using the nose poke, and grooming.
 MSE loss for each epoch when trained on the entire dataset:
 <p align="center">
-  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Predictions.png" />
+  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Images/Predictions.png" />
 </p>
 
