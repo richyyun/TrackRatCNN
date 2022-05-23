@@ -2,6 +2,7 @@
 import pickle
 import torch
 import time
+import copy
 import torchvision
 import numpy as np
 import os
@@ -30,7 +31,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ''' Dataset and Dataloader setup '''
 ### Define dataset
 class Data(torch.utils.data.Dataset):
-    def __init__(self, imgpath, labelpath):
+    def __init__(self, imgpath, labelpath, device):
         
         # Load images from the path and reorder so they are actually in order
         self.imgpath = imgpath
@@ -71,7 +72,7 @@ imgpath = os.getcwd() + '/ChocolateImages'
 labelpath = os.getcwd() + '/ChocolateLabels'
 
 # Define dataset
-data = Data(imgpath, labelpath)
+data = Data(imgpath, labelpath, device)
 # Split dataset into train and test data
 testsize = int(0.2*np.floor(len(data)))
 trainsize = len(data) - testsize
@@ -103,13 +104,17 @@ class positionmodel(nn.Module):
         )
         
         # Convolution layers
-        self.BasicBlock = nn.Sequential(
+        # Have to deepcopy each one to prevent batchnorm from behaving unpredictably
+        self.BasicBlock1 = nn.Sequential(
             nn.Conv2d(filters, filters, kernel_size = (3,3), stride = (1,1), padding = (1,1)),
             nn.BatchNorm2d(filters),
             nn.ReLU(),
             nn.Conv2d(filters, filters, kernel_size = (3,3), stride = (1,1), padding = (1,1)),
             nn.BatchNorm2d(filters)
-        )         
+        )
+        self.BasicBlock2 = copy.deepcopy(self.BasicBlock1)
+        self.BasicBlock3 = copy.deepcopy(self.BasicBlock1)
+        self.BasicBlock4 = copy.deepcopy(self.BasicBlock1)
         
         # Shrink parameter count so fully connected layers aren't too large
         self.AvgPool = nn.AdaptiveAvgPool2d((10, 10))
@@ -143,10 +148,10 @@ class positionmodel(nn.Module):
         x = self.Conv1(x)
         
         # Convolution layers
-        x = self.BasicBlock(x)
-        x = self.BasicBlock(x)
-        x = self.BasicBlock(x)
-        x = self.BasicBlock(x)
+        x = self.BasicBlock1(x)
+        x = self.BasicBlock2(x)
+        x = self.BasicBlock3(x)
+        x = self.BasicBlock4(x)
         
         # Lower parameters and flatten to 1D array per input sample
         y = self.AvgPool(x)
@@ -174,14 +179,11 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
 ''' Define training and evaluation ''' 
 # To keep scopes separate and avoid running out of memory
 # Train the model
-def train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps, TrainLoss):
+def train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps):
     model.train()
     b = 0                   # Batch number
+    trainloss = np.zeros((1, len(trainloader)))
     for img, label in trainloader:
-        
-        # Put on CUDA 
-        img = img.to(device)
-        label = label.to(device)
                 
         # print('Forward pass...') # For debugging
         out, _ , _ = model(img)
@@ -189,49 +191,53 @@ def train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps, Tra
         # Mean squared loss
         loss = nn.functional.mse_loss(out, label.float())
         
-        TrainLoss[e,b] = loss.item()
+        trainloss[0, b] = loss.item()
         
         # print('Backward pass...') # For debugging
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
+        diff = np.subtract(out.cpu().detach().numpy(), label.cpu().detach().numpy())
+        mse = np.mean(np.square(diff))
+        
         if b%verbose_steps == 0:
             print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(trainloader))
-            print('Training Loss:', np.sqrt(TrainLoss[e,b]*2)) # Euclidean distance by pixels
+            print('Training Loss:', np.sqrt(trainloss[0, b]*2)) # Euclidean distance by pixels
+            print('Training Loss Test:', np.sqrt(mse*2))
             print('Time:', time.time()-start)
             
         b += 1
+    
+    return trainloss
  
 # Test the model 
 @torch.inference_mode()  # Decorator for no_grad(), speeds up calculations
-def evaluate(model, testloader, device, e, verbose_steps, TestLoss):
+def evaluate(model, testloader, device, e, verbose_steps):
     model.eval()
     # Loop through test dataset
+    testloss = np.zeros((1, len(testloader)))
     b = 0                   # Batch number
     for img, label in testloader:
-        
-        # Put on CUDA 
-        img = img.to(device)
         
         # Get output of model        
         out, _ , _ = model(img)
                       
-        # Mean squared loss
+        # Mean squared error
         diff = np.subtract(out.cpu().detach().numpy(), label.cpu().detach().numpy())
-        squared = np.power(diff, 2)
-        mse = np.mean(squared)
+        mse = np.mean(np.square(diff))
         
-        TestLoss[e,b] = mse
+        testloss[0, b] = mse
         
         del out    # Just to make sure
         
         if b%verbose_steps == 0:
             print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(testloader))
-            print('Test Loss:', np.sqrt(TestLoss[e,b]*2)) # Euclidean distance by pixels
+            print('Test Loss:', np.sqrt(testloss[0, b]*2)) # Euclidean distance by pixels
             print('Time:', time.time()-start)
-            
         b += 1
+        
+    return testloss
     
 
 ''' Train model '''
@@ -243,8 +249,8 @@ verbose_steps = 10         # How many batches to wait before printing info
 start = time.time()
 
 for e in range(epochs):
-    train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps, TrainLoss)
-    evaluate(model, testloader, device, e, verbose_steps, TestLoss)   
+    TrainLoss[e, :] = train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps)
+    TestLoss[e, :] = evaluate(model, testloader, device, e, verbose_steps)   
 
 
 ''' Save '''
@@ -256,6 +262,7 @@ print('Model Saved')
 # # To load
 # model = positionmodel()
 # model.load_state_dict(torch.load(modelfile))
+# model.eval()
 
 ## Save losses
 lossfile = os.getcwd() + '/Losses/Custom_TrainTest.pkl'
@@ -277,6 +284,7 @@ plt.plot(TrainLoss.T)
 # Average per epoch
 plt.figure()
 plt.plot(np.mean(TrainLoss, axis=1))
+plt.plot(np.mean(TestLoss, axis=1))
 plt.yscale('log')
 
 # Difference per epoch
@@ -294,20 +302,20 @@ width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps = video.get(cv2.CAP_PROP_FPS)
 video = cv2.VideoCapture(vidname)
-labelvid = os.getcwd() + '/Videos/Chocolate1T_07_14_14_Predict_Custom.avi'
+labelvid = os.getcwd() + '/Videos/Predictions_TrainTest.avi'
 out = cv2.VideoWriter(labelvid, cv2.VideoWriter_fourcc(*'MJPG'), fps, (width, height))
 
+model.eval()
 # Print video. Probably a faster way to do this, but sufficiently fast for now
 for f in range(length):
     
     _, frame = video.read()
     temp = data.__getitem__(f)
-    pos = temp[1].numpy()
+    pos = temp[1].cpu().numpy()
     # Red is "true" location
     cv2.circle(frame, (int(pos[0]), int(pos[1])), 5, (0, 0, 255), thickness=2)
     
     img = temp[0]
-    img = img.to(device)
     pred, _, _ = model(img[None, :])
     pred = pred.cpu().detach().numpy().squeeze()
     # Blue is prediction
