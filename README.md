@@ -19,7 +19,8 @@ I initially tried using a pre-trained model (ResNet) for transfer learning, but 
    - ~~Hyperparameter tuning~~
    - ~~Re-save the video with correct label and the prediction overlaid for manual assessment~~
       - ~~Large errors could be related to instances when the animal is rearing~~
-6. Split the train and test sets in the Dataset **&larr; Currently in progress**
+6. ~~Split the train and test sets in the Dataset ~~
+   - Shows a relatively large difference in test and train error; train for longer, use a larger learning rate **&larr; Currently in progress**
    - Use to inform need of regularization (already using L2 and getting some from batch norm)
 7. Clean up code - split into other files
 7. Test on completely different dataset
@@ -40,10 +41,16 @@ MSE loss for each epoch when trained on the entire dataset:
 
 To ensure the model is doing well in all conditions (i.e. that it is consistent when the animal is rearing, using a nose-poke port for water, or grooming) I plotted the true and predicted positions on the original video. Below shows, from left to right, examples of the true position (red circle) and predicted position (blue circle) when the animal is rearing, using the nose poke, and grooming.
 
-MSE loss for each epoch when trained on the entire dataset:
 <p align="center">
   <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Images/Predictions.png" />
 </p>
+
+Once I got this up and running, I split up the dataset into train and test sets (80-20 split) and obtained train and test errors across 100 epochs 5 times: 
+<p align="center">
+  <img src="https://github.com/richyyun/TrackRatCNN/blob/main/Images/TrainTest.png" />
+</p>
+
+There is roughly a 2 pixel difference in test and train error in the final epoch. Though not much in absolute terms, that is still a 25% increase in error compared to the ~8 pixels in train error. I did notice that the error, once zoomed in, does seem to still be decreasing. Though it seems like it needs some regularization, I will first be training the model for longer and potentially with a higher learning rate.  
 
 ## Lessons learned
 - Using Dataset and Dataloader from PyTorch to setup the data. Splitting into train and test sets is very simple.
