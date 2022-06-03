@@ -82,6 +82,7 @@ batch_size = 32     # Seems to work best
 trainloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
 testloader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
+
 ''' Define model '''
 class positionmodel(nn.Module):                    
     def __init__(self): 
@@ -198,13 +199,9 @@ def train_one_epoch(model, optimizer, trainloader, device, e, verbose_steps):
         loss.backward()
         optimizer.step()
         
-        diff = np.subtract(out.cpu().detach().numpy(), label.cpu().detach().numpy())
-        mse = np.mean(np.square(diff))
-        
         if b%verbose_steps == 0:
             print('Epoch:', e+1 , '/', epochs, ' Batch:', b+1, '/', len(trainloader))
             print('Training Loss:', np.sqrt(trainloss[0, b]*2)) # Euclidean distance by pixels
-            print('Training Loss Test:', np.sqrt(mse*2))
             print('Time:', time.time()-start)
             
         b += 1
@@ -242,7 +239,7 @@ def evaluate(model, testloader, device, e, verbose_steps):
 
 ''' Train model '''
 ### Mini-batch training
-epochs = 100
+epochs = 200
 TrainLoss = np.zeros((epochs, len(trainloader)))
 TestLoss = np.zeros((epochs, len(testloader)))
 verbose_steps = 10         # How many batches to wait before printing info
@@ -255,7 +252,7 @@ for e in range(epochs):
 
 ''' Save '''
 ## Save trained model
-modelfile = os.getcwd() + '/Models/Custom_TrainTest.pt'
+modelfile = os.getcwd() + '/Models/Custom_TrainTest5.pt'
 torch.save(model.state_dict(), modelfile)
 print('Model Saved')
 
@@ -265,7 +262,7 @@ print('Model Saved')
 # model.eval()
 
 ## Save losses
-lossfile = os.getcwd() + '/Losses/Custom_TrainTest.pkl'
+lossfile = os.getcwd() + '/Losses/Custom_TrainTest5.pkl'
 file = open(lossfile,'wb')
 pickle.dump([TrainLoss, TestLoss], file)
 print('Losses Saved')
@@ -281,10 +278,16 @@ file.close()
 # Each batch per epoch
 plt.figure()
 plt.plot(TrainLoss.T)
+plt.plot(TestLoss)
+plt.yscale('log')
 # Average per epoch
 plt.figure()
-plt.plot(np.mean(TrainLoss, axis=1))
-plt.plot(np.mean(TestLoss, axis=1))
+trainmean = np.mean(TrainLoss, axis=1)
+testmean = np.mean(TestLoss, axis=1)
+plt.plot(trainmean)
+plt.plot(testmean)
+# mvavg = np.convolve(np.mean(TestLoss, axis=1), np.ones(5)/5, mode='same')
+# plt.plot(mvavg)
 plt.yscale('log')
 
 # Difference per epoch
