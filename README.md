@@ -20,10 +20,8 @@ I initially tried using a pre-trained model (ResNet) for transfer learning, but 
    - ~~Re-save the video with correct label and the prediction overlaid for manual assessment~~
       - ~~Large errors could be related to instances when the animal is rearing~~
 6. ~~Split the train and test sets in the Dataset~~
-   - Shows a relatively large difference in test and train error; train for longer, use a larger learning rate **&larr; Currently in progress**
-   - Use to inform need of regularization (already using L2 and getting some from batch norm)
-7. Clean up code - split into other files
-7. Test on completely different dataset
+   - ~~Shows a relatively large difference in test and train error; train for longer, use a larger learning rate~~
+7. Test on completely different dataset **&larr; Currently in progress**
    - Iterate for further tuning
 
 ## Work done so far
